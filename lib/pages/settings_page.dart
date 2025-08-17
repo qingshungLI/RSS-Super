@@ -4,8 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:rss_reader/providers/theme_provider.dart';
-
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
 class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
@@ -71,10 +73,9 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("设置"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+      appBar: GradientAppBar(
+        title: "设置",
+        centerTitle: true,
       ),
       body: ListView(
         children: [

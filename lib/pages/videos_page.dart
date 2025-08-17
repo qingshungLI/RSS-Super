@@ -2,62 +2,59 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/models/article.dart';
+import 'package:rss_reader/models/rss_feed.dart';
 import 'package:rss_reader/pages/webview_page.dart';
 import 'package:rss_reader/providers/app_state_provider.dart';
+import 'package:rss_reader/widgets/article_card.dart';
+import 'package:rss_reader/widgets/empty_state.dart';
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
 
 class VideosPage extends StatelessWidget {
+  const VideosPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("我的收藏"),
+      appBar: GradientAppBar(
+        title: '我的收藏',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () {
+              Provider.of<AppStateProvider>(context, listen: false).initialize();
+            },
+            tooltip: '刷新',
+          ),
+        ],
       ),
       body: Consumer<AppStateProvider>(
         builder: (context, appState, _) {
           final List<Article> favorites = appState.articles.where((a) => a.isFavorite).toList();
           if (favorites.isEmpty) {
-            return const Center(child: Text('暂无收藏'));
+            return EmptyState(
+              title: '暂无收藏',
+              subtitle: '将喜欢的文章添加到收藏，方便以后查看',
+              icon: Icons.favorite_border,
+              actionText: '浏览文章',
+              onAction: () {
+                Navigator.pop(context);
+              },
+            );
           }
-          return ListView.separated(
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: favorites.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final article = favorites[index];
-              return Dismissible(
-                key: ValueKey('fav_${article.id ?? index}'),
-                direction: DismissDirection.startToEnd,
-                background: Container(
-                  color: Colors.orange,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.star_border, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('取消收藏', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-                confirmDismiss: (_) async {
-                  return await showDialog<bool>(
-                        context: context,
-                        builder: (dCtx) => AlertDialog(
-                          title: const Text('确认操作'),
-                          content: const Text('确定要取消收藏吗？'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.of(dCtx).pop(false), child: const Text('取消')),
-                            TextButton(onPressed: () => Navigator.of(dCtx).pop(true), child: const Text('确定')),
-                          ],
-                        ),
-                      ) ?? false;
-                },
-                onDismissed: (_) async {
-                  await Provider.of<AppStateProvider>(context, listen: false).toggleFavoriteStatus(article);
-                },
-                child: ListTile(
-                  leading: const Icon(Icons.article_outlined),
-                  title: Text(article.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  trailing: const Icon(Icons.chevron_right),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: ArticleCard(
+                  article: article,
+                  isRead: article.isRead,
+                  feedTitle: appState.feeds.firstWhere(
+                    (feed) => feed.id == article.feedId,
+                    orElse: () => RssFeed(id: null, title: '未知来源', url: '', folderId: null),
+                  ).title,
                   onTap: () {
                     if (article.url.isNotEmpty) {
                       Navigator.push(
@@ -67,6 +64,13 @@ class VideosPage extends StatelessWidget {
                         ),
                       );
                     }
+                    Provider.of<AppStateProvider>(context, listen: false).markArticleAsRead(article);
+                  },
+                  onToggleFavorite: (article) {
+                    Provider.of<AppStateProvider>(context, listen: false).toggleFavoriteStatus(article);
+                  },
+                  onToggleReadLater: (article) {
+                    Provider.of<AppStateProvider>(context, listen: false).toggleReadLaterStatus(article);
                   },
                 ),
               );

@@ -7,6 +7,8 @@ import 'package:rss_reader/models/folder.dart';
 import 'package:rss_reader/dialogs/add_folder_dialog.dart';
 
 class AddFeedDialog extends StatefulWidget {
+  const AddFeedDialog({super.key});
+
   @override
   _AddFeedDialogState createState() => _AddFeedDialogState();
 }
@@ -72,7 +74,7 @@ class _AddFeedDialogState extends State<AddFeedDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("添加 RSS 订阅源"),
+      title: Text("添加 RSS 订阅源（opml侧栏订阅源导入）"),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(

@@ -30,7 +30,7 @@ String convertBilibiliDeepLinkToHttp(String url) {
 class ArticleReaderPage extends StatefulWidget {
   final Article article;
 
-  const ArticleReaderPage({Key? key, required this.article}) : super(key: key);
+  const ArticleReaderPage({super.key, required this.article});
 
   @override
   _ArticleReaderPageState createState() => _ArticleReaderPageState();
@@ -110,10 +110,10 @@ class _ArticleReaderPageState extends State<ArticleReaderPage> {
             return NavigationDecision.navigate;
           },
         ),
-      );
+      )
       // --- 加载文章的原始链接 ---
-      final realUrl = convertBilibiliDeepLinkToHttp(widget.article.url);
-      _webViewController.loadRequest(Uri.parse(widget.article.url));
+      
+      ..loadRequest(Uri.parse(widget.article.url));
   }
   
 

@@ -1,8 +1,10 @@
 // lib/pages/using_page.dart
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
 class UsingPage extends StatefulWidget {
+  const UsingPage({super.key});
+
   @override
   _UsingPageState createState() => _UsingPageState();
 }
@@ -11,10 +13,9 @@ class _UsingPageState extends State<UsingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("使用说明"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+      appBar: GradientAppBar(
+        title: "使用说明",
+        centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

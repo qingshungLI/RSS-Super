@@ -35,15 +35,25 @@ dependencies:
   url_launcher: ^6.3.0
   # 用于本地数据存储
   shared_preferences: ^2.2.2
+  
+  # 用于文件选择和 OPML 导入
+  file_picker: ^8.0.0+1
+  
+  # 用于解析 XML 文件
+  xml: ^5.4.1
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.10.0
 
 flutter:
   uses-material-design: true
-
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
   assets:
     # - assets/images/

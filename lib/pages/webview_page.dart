@@ -13,7 +13,7 @@ class WebViewPage extends StatefulWidget {
   final String? title;
   final Article? article; // 可选：用于关联笔记
 
-  const WebViewPage({Key? key, required this.url, this.title, this.article}) : super(key: key);
+  const WebViewPage({super.key, required this.url, this.title, this.article});
 
   @override
   State<WebViewPage> createState() => _WebViewPageState();
@@ -211,7 +211,8 @@ String _convertToHttpUrl(String url) {
                     IconButton(
                       tooltip: current.isFavorite ? '取消收藏' : '收藏',
                       icon: Icon(
-                        current.isFavorite ? Icons.star : Icons.star_border,
+                        current.isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: current.isFavorite ? Colors.red : null,
                       ),
                       onPressed: canToggle
                           ? () async {
@@ -256,7 +257,7 @@ String _convertToHttpUrl(String url) {
 
 class ArticleNotesSheet extends StatefulWidget {
   final int articleId;
-  const ArticleNotesSheet({Key? key, required this.articleId}) : super(key: key);
+  const ArticleNotesSheet({super.key, required this.articleId});
 
   @override
   State<ArticleNotesSheet> createState() => _ArticleNotesSheetState();

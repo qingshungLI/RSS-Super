@@ -2,64 +2,59 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/models/article.dart';
+import 'package:rss_reader/models/rss_feed.dart';
 import 'package:rss_reader/pages/webview_page.dart';
 import 'package:rss_reader/providers/app_state_provider.dart';
+import 'package:rss_reader/widgets/article_card.dart';
+import 'package:rss_reader/widgets/empty_state.dart';
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
 
 class LookLaterPage extends StatelessWidget {
-  const LookLaterPage({Key? key}) : super(key: key);
+  const LookLaterPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('稍后再看'),
+      appBar: GradientAppBar(
+        title: '稍后再看',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () {
+              Provider.of<AppStateProvider>(context, listen: false).initialize();
+            },
+            tooltip: '刷新',
+          ),
+        ],
       ),
       body: Consumer<AppStateProvider>(
         builder: (context, appState, _) {
           final List<Article> readLater = appState.articles.where((a) => a.isReadLater).toList();
           if (readLater.isEmpty) {
-            return const Center(child: Text('暂无“稍后再看”条目'));
+            return EmptyState(
+              title: '暂无稍后再看',
+              subtitle: '将感兴趣的文章添加到稍后再看，方便以后阅读',
+              icon: Icons.bookmark_border,
+              actionText: '浏览文章',
+              onAction: () {
+                Navigator.pop(context);
+              },
+            );
           }
-          return ListView.separated(
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
             itemCount: readLater.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final article = readLater[index];
-              return Dismissible(
-                key: ValueKey('later_${article.id ?? index}'),
-                direction: DismissDirection.startToEnd,
-                background: Container(
-                  color: Colors.blueGrey,
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.watch_later_outlined, color: Colors.white),
-                      SizedBox(width: 8),
-                      Text('移出稍后再看', style: TextStyle(color: Colors.white)),
-                    ],
-                  ),
-                ),
-                confirmDismiss: (_) async {
-                  return await showDialog<bool>(
-                        context: context,
-                        builder: (dCtx) => AlertDialog(
-                          title: const Text('确认操作'),
-                          content: const Text('确定要移出“稍后再看”吗？'),
-                          actions: [
-                            TextButton(onPressed: () => Navigator.of(dCtx).pop(false), child: const Text('取消')),
-                            TextButton(onPressed: () => Navigator.of(dCtx).pop(true), child: const Text('确定')),
-                          ],
-                        ),
-                      ) ?? false;
-                },
-                onDismissed: (_) async {
-                  await Provider.of<AppStateProvider>(context, listen: false).toggleReadLaterStatus(article);
-                },
-                child: ListTile(
-                  leading: const Icon(Icons.article_outlined),
-                  title: Text(article.title, maxLines: 2, overflow: TextOverflow.ellipsis),
-                  trailing: const Icon(Icons.chevron_right),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: ArticleCard(
+                  article: article,
+                  isRead: article.isRead,
+                  feedTitle: appState.feeds.firstWhere(
+                    (feed) => feed.id == article.feedId,
+                    orElse: () => RssFeed(id: null, title: '未知来源', url: '', folderId: null),
+                  ).title,
                   onTap: () {
                     if (article.url.isNotEmpty) {
                       Navigator.push(
@@ -69,6 +64,13 @@ class LookLaterPage extends StatelessWidget {
                         ),
                       );
                     }
+                    Provider.of<AppStateProvider>(context, listen: false).markArticleAsRead(article);
+                  },
+                  onToggleFavorite: (article) {
+                    Provider.of<AppStateProvider>(context, listen: false).toggleFavoriteStatus(article);
+                  },
+                  onToggleReadLater: (article) {
+                    Provider.of<AppStateProvider>(context, listen: false).toggleReadLaterStatus(article);
                   },
                 ),
               );

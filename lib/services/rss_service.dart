@@ -39,7 +39,7 @@ class RssService {
     // 规范化：支持 rsshub:// 前缀
     String normalizedUrl = url;
     if (url.startsWith('rsshub://')) {
-      normalizedUrl = 'https://rsshub.app/' + url.substring('rsshub://'.length);
+      normalizedUrl = 'https://rsshub.app/${url.substring('rsshub://'.length)}';
     }
 
     final firstUri = Uri.parse(normalizedUrl);

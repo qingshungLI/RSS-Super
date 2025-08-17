@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
+import 'package:rss_reader/dialogs/import_opml_dialog.dart';
 class SubscriptionSourcesPage extends StatefulWidget {
+  const SubscriptionSourcesPage({super.key});
+
   @override
   _SubscriptionSourcesPageState createState() => _SubscriptionSourcesPageState();
 }
@@ -259,11 +262,19 @@ class _SubscriptionSourcesPageState extends State<SubscriptionSourcesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("订阅源管理"),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+      appBar: GradientAppBar(
+        title: "订阅源管理",
         actions: [
+          IconButton(
+            icon: Icon(Icons.file_upload),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const ImportOpmlDialog(),
+              );
+            },
+            tooltip: '导入 OPML',
+          ),
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () => _showAddEditDialog(),

@@ -4,15 +4,15 @@ import 'package:provider/provider.dart';
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/models/note.dart';
 import 'package:rss_reader/providers/app_state_provider.dart';
-
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
 class NotesPage extends StatelessWidget {
-  const NotesPage({Key? key}) : super(key: key);
+  const NotesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('我的笔记'),
+      appBar: GradientAppBar(
+        title: '我的笔记',
       ),
       body: Consumer<AppStateProvider>(
         builder: (context, appState, _) {

@@ -16,8 +16,16 @@ import 'package:rss_reader/pages/webview_page.dart';
 import 'package:rss_reader/pages/looklater_page.dart';
 import 'package:rss_reader/pages/using_page.dart';
 import 'package:rss_reader/pages/subscription_sources_page.dart';
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
+import 'package:rss_reader/widgets/modern_card.dart';
+import 'package:rss_reader/widgets/modern_button.dart';
+import 'package:rss_reader/widgets/article_card.dart';
+import 'package:rss_reader/widgets/empty_state.dart';
+import 'package:rss_reader/widgets/modern_drawer.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -42,12 +50,14 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_getAppBarTitle()),
+      appBar: GradientAppBar(
+        title: _getAppBarTitle(),
+        centerTitle: false,
+        automaticallyImplyLeading: false,
         actions: [
           // 时间筛选按钮
           PopupMenuButton<String>(
-            icon: Icon(Icons.filter_list),
+            icon: const Icon(Icons.filter_list, color: Colors.white),
             tooltip: '时间筛选',
             onSelected: (String value) {
               setState(() {
@@ -59,9 +69,9 @@ class _HomePageState extends State<HomePage> {
                 value: 'all',
                 child: Row(
                   children: [
-                    Icon(Icons.all_inclusive, size: 20),
-                    SizedBox(width: 8),
-                    Text('全部时间'),
+                    Icon(Icons.all_inclusive, size: 20, color: Theme.of(context).primaryColor),
+                    const SizedBox(width: 8),
+                    const Text('全部时间'),
                   ],
                 ),
               ),
@@ -69,9 +79,9 @@ class _HomePageState extends State<HomePage> {
                 value: 'today',
                 child: Row(
                   children: [
-                    Icon(Icons.today, size: 20),
-                    SizedBox(width: 8),
-                    Text('今天'),
+                    Icon(Icons.today, size: 20, color: Theme.of(context).primaryColor),
+                    const SizedBox(width: 8),
+                    const Text('今天'),
                   ],
                 ),
               ),
@@ -79,9 +89,9 @@ class _HomePageState extends State<HomePage> {
                 value: 'yesterday',
                 child: Row(
                   children: [
-                    Icon(Icons.history, size: 20),
-                    SizedBox(width: 8),
-                    Text('昨天'),
+                    Icon(Icons.history, size: 20, color: Theme.of(context).primaryColor),
+                    const SizedBox(width: 8),
+                    const Text('昨天'),
                   ],
                 ),
               ),
@@ -89,9 +99,9 @@ class _HomePageState extends State<HomePage> {
                 value: 'week',
                 child: Row(
                   children: [
-                    Icon(Icons.view_week, size: 20),
-                    SizedBox(width: 8),
-                    Text('本周'),
+                    Icon(Icons.view_week, size: 20, color: Theme.of(context).primaryColor),
+                    const SizedBox(width: 8),
+                    const Text('本周'),
                   ],
                 ),
               ),
@@ -99,9 +109,9 @@ class _HomePageState extends State<HomePage> {
                 value: 'month',
                 child: Row(
                   children: [
-                    Icon(Icons.calendar_month, size: 20),
-                    SizedBox(width: 8),
-                    Text('本月'),
+                    Icon(Icons.calendar_month, size: 20, color: Theme.of(context).primaryColor),
+                    const SizedBox(width: 8),
+                    const Text('本月'),
                   ],
                 ),
               ),
@@ -109,7 +119,7 @@ class _HomePageState extends State<HomePage> {
           ),
           // 搜索按钮
           IconButton(
-            icon: Icon(Icons.search),
+            icon: const Icon(Icons.search, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -121,7 +131,7 @@ class _HomePageState extends State<HomePage> {
           Consumer<AppStateProvider>(
             builder: (context, appState, child) {
               return IconButton(
-                icon: Icon(Icons.sync),
+                icon: const Icon(Icons.sync, color: Colors.white),
                 onPressed: () {
                   // 调用状态管理中的同步方法
                   appState.syncAllFeeds();
@@ -132,7 +142,71 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      drawer: _buildDrawer(context), // 侧栏
+      drawer: Consumer<AppStateProvider>(
+        builder: (context, appState, child) {
+                     return ModernDrawer(
+             feeds: appState.feeds,
+             folders: appState.folders,
+             currentFilter: _currentFilter,
+             currentFilterId: _currentFilterId,
+             onFilterChanged: (filter, filterId) {
+               setState(() {
+                 _currentFilter = filter;
+                 _currentFilterId = filterId;
+               });
+               Navigator.pop(context);
+             },
+             onNotes: () {
+               Navigator.pop(context);
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => NotesPage()),
+               );
+             },
+             onVideos: () {
+               Navigator.pop(context);
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => VideosPage()),
+               );
+             },
+             onLookLater: () {
+               Navigator.pop(context);
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => const LookLaterPage()),
+               );
+             },
+             onSettings: () {
+               Navigator.pop(context);
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => SettingsPage()),
+               );
+             },
+             onSubscriptionSources: () {
+               Navigator.pop(context);
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => SubscriptionSourcesPage()),
+               );
+             },
+             onUsing: () {
+               Navigator.pop(context);
+               Navigator.push(
+                 context,
+                 MaterialPageRoute(builder: (context) => UsingPage()),
+               );
+             },
+             onDeleteFolder: (folder) async {
+               await appState.deleteFolder(folder.id!);
+             },
+             onDeleteFeed: (feed) async {
+               await appState.deleteFeed(feed.id!);
+             },
+           );
+        },
+      ),
       body: _buildBody(context), // 主内容区
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -174,259 +248,6 @@ class _HomePageState extends State<HomePage> {
         },
         child: Icon(Icons.add),
       ),
-    );
-  }
-
-  // 侧栏部分
-  Widget _buildDrawer(BuildContext context) {
-    // 使用 Consumer 来监听 AppStateProvider 的变化
-    return Consumer<AppStateProvider>(
-      builder: (context, appState, child) {
-        return Drawer(
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: <Widget>[
-              DrawerHeader(
-                child: Text(
-                  'RSS Super',
-                  style: TextStyle(color: const Color.fromARGB(255, 46, 23, 179), fontSize: 24),
-                ),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 194, 243, 33),
-                ),
-              ),
-              // “所有” 文章入口
-              ListTile(
-                leading: Icon(Icons.article),
-                title: Text('所有文章'),
-                onTap: () {
-                  setState(() {
-                    _currentFilter = 'all';
-                    _currentFilterId = null;
-                  });
-                  Navigator.pop(context); // 关闭侧栏
-                },
-              ),
-              Divider(),
-              // 文件夹列表
-              ...appState.folders.map((folder) => _buildFolderTile(folder, appState)),
-              Divider(),
-              // 特殊入口
-              ListTile(
-                leading: Icon(Icons.bookmark),
-                title: Text('笔记'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => NotesPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.star),
-                title: Text('收藏'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => VideosPage()),
-                  );
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.watch_later),
-                title: Text('稍后再看'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LookLaterPage()),
-                  );
-                },
-              ),
-              Divider(),
-              // 设置按钮
-              ListTile(
-                leading: Icon(Icons.settings),
-                title: Text('设置'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => SettingsPage()),
-                  );
-                },
-              ),
-              Divider(),
-                             // 订阅源管理按钮
-               ListTile(
-                 leading: Icon(Icons.rss_feed),
-                 title: Text('订阅源'),
-                 onTap: () {
-                   Navigator.push(
-                     context,
-                     MaterialPageRoute(builder: (context) => SubscriptionSourcesPage()),
-                   );
-                 },
-               ),
-               // 使用说明按钮
-               ListTile(
-                 leading: Icon(Icons.help_outline),
-                 title: Text('使用说明'),
-                 onTap: () {
-                   Navigator.push(
-                     context,
-                     MaterialPageRoute(builder: (context) => UsingPage()),
-                   );
-                 },
-               ),
-               SizedBox(height: 46)
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // 构建文件夹和其下的 Feed 列表
-  Widget _buildFolderTile(Folder folder, AppStateProvider appState) {
-    final feedsInFolder = appState.feeds.where((feed) => feed.folderId == folder.id).toList();
-
-    return Dismissible(
-      key: ValueKey('folder_${folder.id ?? folder.name}'),
-      direction: DismissDirection.startToEnd,
-      background: Container(
-        color: Colors.red,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: const Row(
-          children: [
-            Icon(Icons.delete, color: Colors.white),
-            SizedBox(width: 8),
-            Text('删除文件夹', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('确认删除'),
-            content: Text('将删除文件夹“${folder.name}”及其所有订阅源，确定继续？'),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-              TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('删除')),
-            ],
-          ),
-        ) ?? false;
-      },
-      onDismissed: (_) async {
-        if (folder.id != null) {
-          await appState.deleteFolder(folder.id!);
-        }
-      },
-     child: ExpansionTile(
-  leading: Stack(
-    clipBehavior: Clip.none,
-    children: [
-      const Icon(Icons.folder),
-      Consumer<AppStateProvider>(
-        builder: (context, appState, _) {
-          int unread = appState.unreadCountForFolder(folder,appState);
-          return unread > 0
-              ? Positioned(
-                  right: -2, // 调整位置
-                  top: -2,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                )
-              : const SizedBox.shrink();
-        },
-      ),
-    ],
-  ),
-  title: Text(folder.name),
-  children: feedsInFolder.map((feed) => _buildFeedTile(feed)).toList(),
-),
-
-    );
-  }
-
-  // 构建单个 Feed 列表项
-  Widget _buildFeedTile(RssFeed feed) {
-    return Dismissible(
-      key: ValueKey('feed_${feed.id ?? feed.title}'),
-      direction: DismissDirection.startToEnd,
-      background: Container(
-        color: Colors.red,
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: const Row(
-          children: [
-            Icon(Icons.delete, color: Colors.white),
-            SizedBox(width: 8),
-            Text('删除订阅', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-      ),
-      confirmDismiss: (direction) async {
-        return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('确认删除'),
-            content: Text('将删除订阅“${feed.title}”，确定继续？'),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('取消')),
-              TextButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('删除')),
-            ],
-          ),
-        ) ?? false;
-      },
-      onDismissed: (_) async {
-        if (feed.id != null) {
-          await Provider.of<AppStateProvider>(context, listen: false).deleteFeed(feed.id!);
-        }
-      },
-    child: ListTile(
-  leading: Stack(
-    clipBehavior: Clip.none,
-    children: [
-      const Icon(Icons.rss_feed),
-      Consumer<AppStateProvider>(
-        builder: (context, appState, _) {
-          int unread = appState.unreadCountForFeed(feed);
-          return unread > 0
-              ? Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                )
-              : const SizedBox.shrink();
-        },
-      ),
-    ],
-  ),
-  title: Text(feed.title),
-  onTap: () {
-    setState(() {
-      _currentFilter = 'feedId';
-      _currentFilterId = feed.id;
-    });
-    Navigator.pop(context);
-  },
-),
-
-
     );
   }
 
@@ -602,7 +423,9 @@ class _HomePageState extends State<HomePage> {
         }).toList();
 
         if (filteredArticles.isEmpty) {
-          String emptyMessage = "没有文章";
+          String emptyTitle = "没有文章";
+          String emptySubtitle = "请添加 RSS Feed 并同步";
+          
           if (_timeFilter != 'all') {
             String timeText = '';
             switch (_timeFilter) {
@@ -619,9 +442,22 @@ class _HomePageState extends State<HomePage> {
                 timeText = '本月';
                 break;
             }
-            emptyMessage = "没有${timeText}的文章";
+            emptyTitle = "没有$timeText的文章";
+            emptySubtitle = "尝试调整时间筛选或添加更多订阅源";
           }
-          return Center(child: Text("$emptyMessage，请添加 RSS Feed 并同步"));
+          
+          return EmptyState(
+            title: emptyTitle,
+            subtitle: emptySubtitle,
+            icon: Icons.article_outlined,
+            actionText: '添加订阅源',
+            onAction: () {
+              showDialog(
+                context: context,
+                builder: (context) => AddFeedDialog(),
+              );
+            },
+          );
         }
         return ListView.builder(
           itemCount: filteredArticles.length,
@@ -660,149 +496,38 @@ class _HomePageState extends State<HomePage> {
                   await Provider.of<AppStateProvider>(context, listen: false).deleteArticleById(article.id!);
                 }
               },
-              child: Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                elevation: 2,
-                child: InkWell(
-                  onTap: () {
-                    final url = article.url;
-                    if (url.isNotEmpty) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => WebViewPage(url: url, title: article.title, article: article),
-                        ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ArticleReaderPage(article: article),
-                        ),
-                      );
-                    }
-                    Provider.of<AppStateProvider>(context, listen: false).markArticleAsRead(article);
-                  },
-                  child: Container(
-                    // 自适应高度，设置一个最小高度即可，避免溢出
-                    constraints: const BoxConstraints(minHeight: 110),
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.network(
-                            "https://placehold.co/80x80/random/fff?text=IMG",
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.eco, size: 60),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        // 在文章标题上方添加订阅源名称
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // 添加订阅源名称
-                              Consumer<AppStateProvider>(
-                                builder: (context, appState, _) {
-                                  final feed = appState.feeds.firstWhere(
-                                    (feed) => feed.id == article.feedId,
-                                    orElse: () => RssFeed(id: null, title: '未知来源', url: '', folderId: null),
-                                  );
-                                  return Text(
-                                    feed.title,
-                                    style: TextStyle(
-                                      color: Colors.blue[600],
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  );
-                                },
-                              ),
-                              const SizedBox(height: 4),
-                              // 添加发布时间
-                              Text(
-                                _formatDate(article.pubDate),
-                                style: TextStyle(
-                                  color: Colors.grey[500],
-                                  fontSize: 11,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                article.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 6),
-                              // 已读百分比（通过 webview 的进度暂时无法同步在列表，这里给占位或从文章字段扩展）
-                              Text(
-                                article.isRead ? '已读' : '未读',
-                                style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Consumer<AppStateProvider>(
-                                    builder: (context, appState, _) {
-                                      // 取最新状态（如收藏/稍后再看切换）
-                                      final aid = article.id;
-                                      final current = aid == null
-                                          ? article
-                                          : (appState.articles.firstWhere(
-                                              (a) => a.id == aid,
-                                              orElse: () => article,
-                                            ));
-                                      return Row(
-                                        children: [
-                                          IconButton(
-                                            iconSize: 20,
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: Icon(current.isFavorite ? Icons.star : Icons.star_border),
-                                            tooltip: current.isFavorite ? '取消收藏' : '收藏',
-                                            onPressed: aid != null
-                                                ? () async {
-                                                    await Provider.of<AppStateProvider>(context, listen: false)
-                                                        .toggleFavoriteStatus(current);
-                                                  }
-                                                : null,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          IconButton(
-                                            iconSize: 20,
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: Icon(current.isReadLater
-                                                ? Icons.watch_later
-                                                : Icons.watch_later_outlined),
-                                            tooltip: current.isReadLater ? '取消稍后再看' : '稍后再看',
-                                            onPressed: aid != null
-                                                ? () async {
-                                                    await Provider.of<AppStateProvider>(context, listen: false)
-                                                        .toggleReadLaterStatus(current);
-                                                  }
-                                                : null,
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              child: ArticleCard(
+                article: article,
+                isRead: article.isRead,
+                feedTitle: appState.feeds.firstWhere(
+                  (feed) => feed.id == article.feedId,
+                  orElse: () => RssFeed(id: null, title: '未知来源', url: '', folderId: null),
+                ).title,
+                onTap: () {
+                  final url = article.url;
+                  if (url.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WebViewPage(url: url, title: article.title, article: article),
+                      ),
+                    );
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ArticleReaderPage(article: article),
+                      ),
+                    );
+                  }
+                  Provider.of<AppStateProvider>(context, listen: false).markArticleAsRead(article);
+                },
+                onToggleFavorite: (article) {
+                  Provider.of<AppStateProvider>(context, listen: false).toggleFavoriteStatus(article);
+                },
+                onToggleReadLater: (article) {
+                  Provider.of<AppStateProvider>(context, listen: false).toggleReadLaterStatus(article);
+                },
               ),
             );
           },

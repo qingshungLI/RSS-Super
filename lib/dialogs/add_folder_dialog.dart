@@ -5,6 +5,8 @@ import 'package:rss_reader/models/folder.dart';
 import 'package:rss_reader/providers/app_state_provider.dart';
 
 class AddFolderDialog extends StatefulWidget {
+  const AddFolderDialog({super.key});
+
   @override
   State<AddFolderDialog> createState() => _AddFolderDialogState();
 }
@@ -25,7 +27,7 @@ class _AddFolderDialogState extends State<AddFolderDialog> {
     final appState = Provider.of<AppStateProvider>(context, listen: false);
     await appState.addFolder(Folder(name: name));
     // 通过名称在最新的列表中找到新建的文件夹对象
-    final Folder? created = appState.folders.firstWhere(
+    final Folder created = appState.folders.firstWhere(
       (f) => f.name == name,
       orElse: () => Folder(name: name),
     );

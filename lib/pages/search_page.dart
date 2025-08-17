@@ -6,8 +6,13 @@ import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/models/folder.dart';
 import 'package:rss_reader/models/rss_feed.dart';
 import 'package:rss_reader/pages/webview_page.dart';
+import 'package:rss_reader/widgets/article_card.dart';
+import 'package:rss_reader/widgets/empty_state.dart';
+import 'package:rss_reader/widgets/gradient_app_bar.dart';
 
 class SearchPage extends StatefulWidget {
+  const SearchPage({super.key});
+
   @override
   _SearchPageState createState() => _SearchPageState();
 }
@@ -94,12 +99,31 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("搜索文章"),
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(120),
-          child: Container(
+      appBar: GradientAppBar(
+        title: '搜索文章',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search, color: Colors.white),
+            onPressed: _performSearch,
+            tooltip: '搜索',
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // 搜索控制面板
+          Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Column(
               children: [
                 // 搜索输入框
@@ -118,12 +142,14 @@ class _SearchPageState extends State<SearchPage> {
                       },
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    filled: true,
+                    fillColor: Theme.of(context).scaffoldBackgroundColor,
                   ),
                   onSubmitted: (_) => _performSearch(),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 // 搜索范围选择
                 Row(
                   children: [
@@ -184,9 +210,10 @@ class _SearchPageState extends State<SearchPage> {
               ],
             ),
           ),
-        ),
+          // 搜索结果
+          Expanded(child: _buildBody()),
+        ],
       ),
-      body: _buildBody(),
     );
   }
 
@@ -197,93 +224,71 @@ class _SearchPageState extends State<SearchPage> {
 
     if (_searchResults.isEmpty) {
       if (_searchController.text.isEmpty) {
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.search, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text('输入关键词开始搜索', style: TextStyle(fontSize: 16, color: Colors.grey)),
-            ],
-          ),
+        return EmptyState(
+          title: '开始搜索',
+          subtitle: '输入关键词搜索感兴趣的文章',
+          icon: Icons.search,
+          actionText: '浏览文章',
+          onAction: () {
+            Navigator.pop(context);
+          },
         );
       } else {
-        return const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.search_off, size: 64, color: Colors.grey),
-              SizedBox(height: 16),
-              Text('未找到相关文章', style: TextStyle(fontSize: 16, color: Colors.grey)),
-            ],
-          ),
+        return EmptyState(
+          title: '未找到相关文章',
+          subtitle: '尝试使用不同的关键词或调整搜索范围',
+          icon: Icons.search_off,
+          actionText: '重新搜索',
+          onAction: () {
+            _searchController.clear();
+            setState(() {
+              _searchResults = [];
+            });
+          },
         );
       }
     }
 
     return ListView.builder(
+      padding: const EdgeInsets.all(16),
       itemCount: _searchResults.length,
       itemBuilder: (context, index) {
         final article = _searchResults[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          child: ListTile(
-            leading: const Icon(Icons.article_outlined),
-            title: Text(
-              article.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  article.content,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      article.isRead ? Icons.check_circle : Icons.radio_button_unchecked,
-                      size: 16,
-                      color: article.isRead ? Colors.green : Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      article.isRead ? '已读' : '未读',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: article.isRead ? Colors.green : Colors.grey,
+        return Consumer<AppStateProvider>(
+          builder: (context, appState, _) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: ArticleCard(
+                article: article,
+                isRead: article.isRead,
+                feedTitle: appState.feeds.firstWhere(
+                  (feed) => feed.id == article.feedId,
+                  orElse: () => RssFeed(id: null, title: '未知来源', url: '', folderId: null),
+                ).title,
+                onTap: () {
+                  if (article.url.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => WebViewPage(
+                          url: article.url,
+                          title: article.title,
+                          article: article,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    if (article.isFavorite)
-                      const Icon(Icons.star, size: 16, color: Colors.amber),
-                    if (article.isReadLater)
-                      const Icon(Icons.watch_later, size: 16, color: Colors.blue),
-                  ],
-                ),
-              ],
-            ),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              if (article.url.isNotEmpty) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => WebViewPage(
-                      url: article.url,
-                      title: article.title,
-                      article: article,
-                    ),
-                  ),
-                );
-              }
-            },
-          ),
+                    );
+                  }
+                  Provider.of<AppStateProvider>(context, listen: false).markArticleAsRead(article);
+                },
+                onToggleFavorite: (article) {
+                  Provider.of<AppStateProvider>(context, listen: false).toggleFavoriteStatus(article);
+                },
+                onToggleReadLater: (article) {
+                  Provider.of<AppStateProvider>(context, listen: false).toggleReadLaterStatus(article);
+                },
+              ),
+            );
+          },
         );
       },
     );
